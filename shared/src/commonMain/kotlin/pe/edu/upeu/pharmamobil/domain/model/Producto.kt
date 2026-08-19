@@ -5,4 +5,8 @@ data class Producto(
     val nombre: String,
     val precio: Double,
     val stock: Int
-)
+) {
+    fun tieneStock(): Boolean {
+        return stock > 0
+    }
+}
