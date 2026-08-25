@@ -15,52 +15,37 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import kotlin.random.Random
+import pe.edu.upeu.pharmamobil.domain.model.Producto
+
 @Composable
 fun ProductoScreen() {
 
-    var nombre by remember {
-        mutableStateOf("")
-    }
+    var nombre by remember { mutableStateOf("") }
+    var precio by remember { mutableStateOf("") }
+    var stock by remember { mutableStateOf("") }
 
-    var precio by remember {
-        mutableStateOf("")
-    }
+    var nombreError by remember { mutableStateOf<String?>(null) }
+    var precioError by remember { mutableStateOf<String?>(null) }
+    var stockError by remember { mutableStateOf<String?>(null) }
 
-    var stock by remember {
-        mutableStateOf("")
-    }
-
-    var nombreError by remember {
-        mutableStateOf<String?>(null)
-    }
-
-    var precioError by remember {
-        mutableStateOf<String?>(null)
-    }
-
-    var stockError by remember {
-        mutableStateOf<String?>(null)
-    }
-
-    var mensajeExito by remember {
-        mutableStateOf<String?>(null)
-    }
+    var mensajeExito by remember { mutableStateOf<String?>(null) }
 
     fun validar(): Boolean {
-        nombreError = if (nombre.isBlank()) "El nombre es obligatorio" else null
+        nombreError = if (nombre.isBlank()) "Ingrese nombre del producto" else null
 
         val precioValor = precio.toDoubleOrNull()
         precioError = when {
-            precio.isBlank() -> "El precio es obligatorio"
-            precioValor == null -> "El precio debe ser un número válido"
-            precioValor <= 0 -> "El precio debe ser mayor a 0"
+            precio.isBlank() -> "Ingrese precio válido"
+            precioValor == null -> "Ingrese precio válido"
+            precioValor <= 0 -> "Ingrese precio válido"
             else -> null
         }
 
         val stockValor = stock.toIntOrNull()
         stockError = when {
-            stock.isBlank() -> "El stock es obligatorio"
-            stockValor == null -> "El stock debe ser un número entero"
+            stock.isBlank() -> "Ingrese stock válido"
+            stockValor == null -> "Ingrese stock válido"
             stockValor < 0 -> "El stock no puede ser negativo"
             else -> null
         }
@@ -81,39 +66,27 @@ fun ProductoScreen() {
         OutlinedTextField(
             value = nombre,
             onValueChange = { nombre = it },
-            label = {
-                Text("Nombre")
-            },
+            label = { Text("Nombre") },
             isError = nombreError != null,
-            supportingText = {
-                nombreError?.let { Text(it) }
-            },
+            supportingText = { nombreError?.let { Text(it) } },
             modifier = Modifier.fillMaxWidth()
         )
 
         OutlinedTextField(
             value = precio,
             onValueChange = { precio = it },
-            label = {
-                Text("Precio")
-            },
+            label = { Text("Precio") },
             isError = precioError != null,
-            supportingText = {
-                precioError?.let { Text(it) }
-            },
+            supportingText = { precioError?.let { Text(it) } },
             modifier = Modifier.fillMaxWidth()
         )
 
         OutlinedTextField(
             value = stock,
             onValueChange = { stock = it },
-            label = {
-                Text("Stock")
-            },
+            label = { Text("Stock") },
             isError = stockError != null,
-            supportingText = {
-                stockError?.let { Text(it) }
-            },
+            supportingText = { stockError?.let { Text(it) } },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -121,7 +94,14 @@ fun ProductoScreen() {
             onClick = {
                 mensajeExito = null
                 if (validar()) {
-                    mensajeExito = "Producto \"$nombre\" registrado correctamente"
+                    val nuevoProducto = Producto(
+                        id = Random.nextLong(1, Long.MAX_VALUE),
+                        nombre = nombre,
+                        precio = precio.toDouble(),
+                        stock = stock.toInt()
+                    )
+                    mensajeExito = "Producto registrado correctamente"
+                    println(nuevoProducto)
                     nombre = ""
                     precio = ""
                     stock = ""
@@ -132,8 +112,6 @@ fun ProductoScreen() {
             Text("Registrar")
         }
 
-        mensajeExito?.let {
-            Text(it)
-        }
+        mensajeExito?.let { Text(it) }
     }
 }
