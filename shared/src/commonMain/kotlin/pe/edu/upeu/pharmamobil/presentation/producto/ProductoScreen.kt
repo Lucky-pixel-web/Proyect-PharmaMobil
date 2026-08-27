@@ -32,7 +32,12 @@ fun ProductoScreen() {
     var mensajeExito by remember { mutableStateOf<String?>(null) }
 
     fun validar(): Boolean {
-        nombreError = if (nombre.isBlank()) "Ingrese nombre del producto" else null
+        val soloLetras = Regex("^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$")
+        nombreError = when {
+            nombre.isBlank() -> "Ingrese nombre del producto"
+            !soloLetras.matches(nombre) -> "El nombre no debe contener números"
+            else -> null
+        }
 
         val precioValor = precio.toDoubleOrNull()
         precioError = when {

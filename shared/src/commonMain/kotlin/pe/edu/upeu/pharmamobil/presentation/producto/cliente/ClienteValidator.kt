@@ -5,8 +5,14 @@ private val TELEFONO_REGEX = Regex("^[0-9]{6,9}$")
 
 object ClienteValidator {
 
+    private val SOLO_LETRAS_REGEX = Regex("^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$")
+
     fun validarNombre(nombre: String): String? {
-        return if (nombre.isBlank()) "El nombre es obligatorio" else null
+        return when {
+            nombre.isBlank() -> "El nombre es obligatorio"
+            !SOLO_LETRAS_REGEX.matches(nombre) -> "El nombre no debe contener números"
+            else -> null
+        }
     }
 
     fun validarCorreo(correo: String): String? {
@@ -18,10 +24,10 @@ object ClienteValidator {
     }
 
     fun validarTelefono(telefono: String): String? {
-        return if (telefono.isNotBlank() && !TELEFONO_REGEX.matches(telefono)) {
-            "El teléfono debe tener entre 6 y 9 dígitos"
-        } else {
-            null
+        return when {
+            telefono.isBlank() -> "El teléfono es obligatorio"
+            !TELEFONO_REGEX.matches(telefono) -> "El teléfono debe tener entre 6 y 9 dígitos"
+            else -> null
         }
     }
 }

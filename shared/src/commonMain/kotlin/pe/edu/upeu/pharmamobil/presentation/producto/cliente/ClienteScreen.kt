@@ -95,7 +95,7 @@ fun ClienteScreen() {
             value = telefono,
             onValueChange = { telefono = it },
             label = {
-                Text("Teléfono (opcional)")
+                Text("Teléfono")
             },
             isError = telefonoError != null,
             supportingText = {
