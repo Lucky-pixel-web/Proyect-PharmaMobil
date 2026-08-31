@@ -23,5 +23,5 @@ import pharmamobil.shared.generated.resources.compose_multiplatform
 
 @Composable
 fun App() {
-    ProductoScreen()
+    ClienteScreen()
 }

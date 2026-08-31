@@ -1,15 +1,26 @@
 package pe.edu.upeu.pharmamobil.presentation.producto
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -31,26 +42,27 @@ fun ProductoScreen() {
 
     var mensajeExito by remember { mutableStateOf<String?>(null) }
 
+    val productosRegistrados = remember { mutableStateListOf<Producto>() }
+    var mostrarLista by remember { mutableStateOf(false) }
+
     fun validar(): Boolean {
         val soloLetras = Regex("^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$")
         nombreError = when {
-            nombre.isBlank() -> "Ingrese nombre del producto"
+            nombre.isBlank() -> "Ingrese nombre del producto, es obligatorio"
             !soloLetras.matches(nombre) -> "El nombre no debe contener números"
             else -> null
         }
 
         val precioValor = precio.toDoubleOrNull()
         precioError = when {
-            precio.isBlank() -> "Ingrese precio válido"
-            precioValor == null -> "Ingrese precio válido"
-            precioValor <= 0 -> "Ingrese precio válido"
+            precioValor == null -> "Ingrese un precio numerico"
+            precioValor <= 0 -> "El precio debe ser mayor que cero"
             else -> null
         }
 
         val stockValor = stock.toIntOrNull()
         stockError = when {
-            stock.isBlank() -> "Ingrese stock válido"
-            stockValor == null -> "Ingrese stock válido"
+            stockValor == null -> "Ingrese un stock entero"
             stockValor < 0 -> "El stock no puede ser negativo"
             else -> null
         }
@@ -59,9 +71,7 @@ fun ProductoScreen() {
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
+        modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
 
@@ -105,6 +115,7 @@ fun ProductoScreen() {
                         precio = precio.toDouble(),
                         stock = stock.toInt()
                     )
+                    productosRegistrados.add(0, nuevoProducto)
                     mensajeExito = "Producto registrado correctamente"
                     println(nuevoProducto)
                     nombre = ""
@@ -118,5 +129,32 @@ fun ProductoScreen() {
         }
 
         mensajeExito?.let { Text(it) }
+
+        OutlinedButton(
+            onClick = { mostrarLista = !mostrarLista },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                if (mostrarLista) "Ocultar registrados (${productosRegistrados.size})"
+                else "Ver productos registrados (${productosRegistrados.size})"
+            )
+        }
+
+        AnimatedVisibility(
+            visible = mostrarLista,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
+        ) {
+            LazyColumn(modifier = Modifier.fillMaxWidth().height(240.dp)) {
+                items(productosRegistrados) { p ->
+                    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                        Column(Modifier.padding(12.dp)) {
+                            Text(p.nombre)
+                            Text("S/ ${p.precio}  ·  Stock: ${p.stock}")
+                        }
+                    }
+                }
+            }
+        }
     }
 }
