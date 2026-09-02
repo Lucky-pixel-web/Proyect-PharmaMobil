@@ -15,8 +15,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -28,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlin.random.Random
 import pe.edu.upeu.pharmamobil.domain.model.Producto
+import pe.edu.upeu.pharmamobil.domain.productosMock
 
 @Composable
 fun ProductoScreen() {
@@ -44,6 +49,9 @@ fun ProductoScreen() {
 
     val productosRegistrados = remember { mutableStateListOf<Producto>() }
     var mostrarLista by remember { mutableStateOf(false) }
+
+    var tabSeleccionada by remember { mutableStateOf(0) }
+    val titulosTabs = listOf("Activos", "Inactivos", "Bajo stock")
 
     fun validar(): Boolean {
         val soloLetras = Regex("^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$")
@@ -70,12 +78,22 @@ fun ProductoScreen() {
         return nombreError == null && precioError == null && stockError == null
     }
 
+    val productosFiltrados = when (tabSeleccionada) {
+        0 -> productosMock.filter { it.activo && !it.esBajoStock() }
+        1 -> productosMock.filter { !it.activo }
+        2 -> productosMock.filter { it.esBajoStock() }
+        else -> emptyList()
+    }
+
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
 
-        Text("PharmaMobil")
+        Text(
+            "PharmaMobil",
+            color = MaterialTheme.colorScheme.primary
+        )
         Text("Registro de Producto")
 
         OutlinedTextField(
@@ -152,6 +170,35 @@ fun ProductoScreen() {
                             Text(p.nombre)
                             Text("S/ ${p.precio}  ·  Stock: ${p.stock}")
                         }
+                    }
+                }
+            }
+        }
+
+        Text("Inventario (Mock)")
+
+        TabRow(selectedTabIndex = tabSeleccionada) {
+            titulosTabs.forEachIndexed { index, titulo ->
+                Tab(
+                    selected = tabSeleccionada == index,
+                    onClick = { tabSeleccionada = index },
+                    text = { Text(titulo) }
+                )
+            }
+        }
+
+        LazyColumn(modifier = Modifier.fillMaxWidth().height(200.dp)) {
+            items(productosFiltrados) { p ->
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        contentColor = MaterialTheme.colorScheme.onSurface
+                    ),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+                ) {
+                    Column(Modifier.padding(12.dp)) {
+                        Text(p.nombre)
+                        Text("S/ ${p.precio}  ·  Stock: ${p.stock}")
                     }
                 }
             }

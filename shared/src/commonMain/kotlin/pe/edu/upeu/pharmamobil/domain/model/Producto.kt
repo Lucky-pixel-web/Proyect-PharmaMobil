@@ -4,9 +4,14 @@ data class Producto(
     val id: Long,
     val nombre: String,
     val precio: Double,
-    val stock: Int
+    val stock: Int,
+    val activo: Boolean = true
 ) {
     fun tieneStock(): Boolean {
         return stock > 0
+    }
+
+    fun esBajoStock(): Boolean {
+        return stock in 1..5
     }
 }
