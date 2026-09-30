@@ -17,11 +17,15 @@ import pe.edu.upeu.pharmamobil.presentation.cliente.ClienteViewModel
 import pe.edu.upeu.pharmamobil.presentation.producto.ProductoViewModel
 import org.koin.core.qualifier.named
 import pe.edu.upeu.pharmamobil.data.remote.crearHttpClient
+import pe.edu.upeu.pharmamobil.data.remote.ProductoApi
+import pe.edu.upeu.pharmamobil.data.repository.ProductoRepositorioRest
 
 val dataModule = module {
-    single<ProductoRepository> { ProductoRepositorioEnMemoria() }
-    single<ClienteRepository> { ClienteRepositorioEnMemoria() }
     single { crearHttpClient(get(), get(named("urlBase"))) }
+    single { ProductoApi(get()) }
+    single { ProductoRepositorioEnMemoria() }
+    single<ProductoRepository> { ProductoRepositorioRest(get(), get()) }
+    single<ClienteRepository> { ClienteRepositorioEnMemoria() }
 }
 
 val domainModule = module {
