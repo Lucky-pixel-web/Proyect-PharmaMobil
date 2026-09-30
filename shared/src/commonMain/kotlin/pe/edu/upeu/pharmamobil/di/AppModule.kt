@@ -15,11 +15,13 @@ import pe.edu.upeu.pharmamobil.domain.usecase.RegistrarClienteUseCase
 import pe.edu.upeu.pharmamobil.domain.usecase.RegistrarProductoUseCase
 import pe.edu.upeu.pharmamobil.presentation.cliente.ClienteViewModel
 import pe.edu.upeu.pharmamobil.presentation.producto.ProductoViewModel
-
+import org.koin.core.qualifier.named
+import pe.edu.upeu.pharmamobil.data.remote.crearHttpClient
 
 val dataModule = module {
     single<ProductoRepository> { ProductoRepositorioEnMemoria() }
     single<ClienteRepository> { ClienteRepositorioEnMemoria() }
+    single { crearHttpClient(get(), get(named("urlBase"))) }
 }
 
 val domainModule = module {
