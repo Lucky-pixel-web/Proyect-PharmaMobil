@@ -1,7 +1,9 @@
 package pe.edu.upeu.pharmamobil.data.repository
 
+import kotlin.coroutines.cancellation.CancellationException
 import pe.edu.upeu.pharmamobil.data.mapper.toDomain
 import pe.edu.upeu.pharmamobil.data.remote.ProductoApi
+import pe.edu.upeu.pharmamobil.data.remote.aErrorDeRed
 import pe.edu.upeu.pharmamobil.domain.model.Producto
 import pe.edu.upeu.pharmamobil.domain.repository.ProductoRepository
 
@@ -11,7 +13,14 @@ class ProductoRepositorioRest(
 ) : ProductoRepository {
 
     override suspend fun listar(): List<Producto> =
-        api.listar().contenido.map { it.toDomain() }
+        try {
+            api.listar().contenido.map { it.toDomain() }
+        } catch (cancelacion: CancellationException) {
+            throw cancelacion
+        } catch (fallo: Throwable) {
+            println("KtorClient: ${fallo::class.simpleName} - ${fallo.message}")
+            throw fallo.aErrorDeRed()
+        }
 
     override suspend fun registrar(producto: Producto): Producto =
         respaldoLocal.registrar(producto)

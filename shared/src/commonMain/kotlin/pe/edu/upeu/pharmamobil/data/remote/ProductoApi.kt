@@ -14,4 +14,7 @@ class ProductoApi(private val client: HttpClient) {
             parameter("pagina", pagina)
             parameter("tamanio", tamanio)
         }.body()
+
+    suspend fun obtenerPorId(id: Long): ProductoResponseDto =
+        client.get("productos/$id").body()
 }
