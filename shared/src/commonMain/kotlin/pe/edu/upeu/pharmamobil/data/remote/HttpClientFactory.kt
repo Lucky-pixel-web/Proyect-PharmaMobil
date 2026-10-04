@@ -23,7 +23,7 @@ fun crearHttpClient(engine: HttpClientEngine, urlBase: String): HttpClient =
             })
         }
         install(Logging) {
-            level = LogLevel.HEADERS
+            level = LogLevel.ALL
             logger = object : Logger {
                 override fun log(message: String) {
                     println("KtorClient: $message")
