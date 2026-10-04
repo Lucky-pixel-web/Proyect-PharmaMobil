@@ -31,7 +31,7 @@ fun crearHttpClient(engine: HttpClientEngine, urlBase: String): HttpClient =
             }
         }
         install(HttpTimeout) {
-            requestTimeoutMillis = 1
+            requestTimeoutMillis = 15000
             connectTimeoutMillis = 10000
         }
         defaultRequest {
