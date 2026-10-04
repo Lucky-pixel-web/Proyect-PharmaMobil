@@ -14,7 +14,7 @@ class ProductoRepositorioRest(
 
     override suspend fun listar(): List<Producto> =
         try {
-            listOf(api.obtenerPorId(99999).toDomain())
+            api.listar().contenido.map { it.toDomain() }
         } catch (cancelacion: CancellationException) {
             throw cancelacion
         } catch (fallo: Throwable) {
