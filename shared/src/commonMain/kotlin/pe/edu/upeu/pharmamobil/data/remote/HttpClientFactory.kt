@@ -18,7 +18,7 @@ fun crearHttpClient(engine: HttpClientEngine, urlBase: String): HttpClient =
         expectSuccess = true
         install(ContentNegotiation) {
             json(Json {
-                ignoreUnknownKeys = false
+                ignoreUnknownKeys = true
                 isLenient = true
             })
         }
