@@ -16,6 +16,31 @@ class ProductoInvalidoException(
     val errores: ErroresDeProducto
 ) : IllegalArgumentException("Los datos del producto no cumplen las reglas del negocio")
 
+private val NOMBRE_REGEX = Regex("^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,%/()-]+$")
+
+internal fun validarProducto(nombre: String, precio: String, stock: String): ErroresDeProducto {
+    val precioValor = precio.toDoubleOrNull()
+    val stockValor = stock.toIntOrNull()
+
+    return ErroresDeProducto(
+        nombre = when {
+            nombre.isBlank() -> "Ingrese nombre del producto, es obligatorio"
+            !NOMBRE_REGEX.matches(nombre) -> "El nombre contiene caracteres no permitidos"
+            else -> null
+        },
+        precio = when {
+            precioValor == null -> "Ingrese un precio numerico"
+            precioValor <= 0 -> "El precio debe ser mayor que cero"
+            else -> null
+        },
+        stock = when {
+            stockValor == null -> "Ingrese un stock entero"
+            stockValor < 0 -> "El stock no puede ser negativo"
+            else -> null
+        }
+    )
+}
+
 class RegistrarProductoUseCase(
     private val productoRepository: ProductoRepository
 ) {
@@ -26,11 +51,7 @@ class RegistrarProductoUseCase(
         stock: String
     ): Result<Producto> {
 
-        val errores = ErroresDeProducto(
-            nombre = validarNombre(nombre),
-            precio = validarPrecio(precio),
-            stock = validarStock(stock)
-        )
+        val errores = validarProducto(nombre, precio, stock)
 
         if (errores.hayErrores) {
             return Result.failure(ProductoInvalidoException(errores))
@@ -45,33 +66,6 @@ class RegistrarProductoUseCase(
                     stock = stock.toInt()
                 )
             )
-        }
-    }
-
-    private fun validarNombre(nombre: String): String? {
-        val soloLetras = Regex("^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$")
-        return when {
-            nombre.isBlank() -> "Ingrese nombre del producto, es obligatorio"
-            !soloLetras.matches(nombre) -> "El nombre no debe contener números"
-            else -> null
-        }
-    }
-
-    private fun validarPrecio(precio: String): String? {
-        val precioValor = precio.toDoubleOrNull()
-        return when {
-            precioValor == null -> "Ingrese un precio numerico"
-            precioValor <= 0 -> "El precio debe ser mayor que cero"
-            else -> null
-        }
-    }
-
-    private fun validarStock(stock: String): String? {
-        val stockValor = stock.toIntOrNull()
-        return when {
-            stockValor == null -> "Ingrese un stock entero"
-            stockValor < 0 -> "El stock no puede ser negativo"
-            else -> null
         }
     }
 }

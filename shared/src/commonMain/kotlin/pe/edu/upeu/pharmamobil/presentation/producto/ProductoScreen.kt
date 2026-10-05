@@ -13,6 +13,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material3.Button
@@ -20,7 +22,9 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -36,8 +40,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import pe.edu.upeu.pharmamobil.presentation.components.EstadoVacio
+import pe.edu.upeu.pharmamobil.presentation.components.MensajeError
 import pe.edu.upeu.pharmamobil.presentation.components.MensajeExito
 import pe.edu.upeu.pharmamobil.presentation.components.ValidatedTextField
+import pe.edu.upeu.pharmamobil.presentation.producto.ProductoUiState.Operacion
 
 @Composable
 fun ProductoScreen(
@@ -50,6 +56,11 @@ fun ProductoScreen(
     var tabSeleccionada by remember { mutableStateOf(0) }
     val titulosTabs = listOf("Activos", "Inactivos", "Bajo stock")
 
+    val tipoEnCurso = (uiState.operacion as? Operacion.EnCurso)?.tipo
+    val guardando = tipoEnCurso == Operacion.Tipo.Crear ||
+            tipoEnCurso == Operacion.Tipo.Actualizar
+    val eliminando = tipoEnCurso == Operacion.Tipo.Eliminar
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -59,15 +70,20 @@ fun ProductoScreen(
 
         FormularioProductoCard(
             formulario = uiState.formulario,
-            registrando = uiState.registrando,
+            guardando = guardando,
             onNombreChange = viewModel::onNombreChange,
             onPrecioChange = viewModel::onPrecioChange,
             onStockChange = viewModel::onStockChange,
-            onRegistrar = viewModel::registrar
+            onGuardar = viewModel::guardar,
+            onCancelar = viewModel::cancelarEdicion
         )
 
         uiState.mensajeExito?.let {
             MensajeExito(it)
+        }
+
+        (uiState.operacion as? Operacion.Fallida)?.let {
+            MensajeError(it.mensaje)
         }
 
         EncabezadoInventario(uiState.fase)
@@ -138,7 +154,12 @@ fun ProductoScreen(
                                 items = productosFiltrados,
                                 key = { it.id }
                             ) { producto ->
-                                ProductoItem(producto)
+                                ProductoItem(
+                                    producto = producto,
+                                    eliminando = eliminando,
+                                    onEditar = { viewModel.editar(producto) },
+                                    onEliminar = { viewModel.eliminar(producto.id) }
+                                )
                             }
                         }
                     }
@@ -166,11 +187,12 @@ fun ProductoScreen(
 @Composable
 private fun FormularioProductoCard(
     formulario: FormularioProducto,
-    registrando: Boolean,
+    guardando: Boolean,
     onNombreChange: (String) -> Unit,
     onPrecioChange: (String) -> Unit,
     onStockChange: (String) -> Unit,
-    onRegistrar: () -> Unit
+    onGuardar: () -> Unit,
+    onCancelar: () -> Unit
 ) {
 
     Card(
@@ -183,7 +205,7 @@ private fun FormularioProductoCard(
         ) {
 
             Text(
-                text = "Registrar producto",
+                text = if (formulario.editando) "Editar producto" else "Registrar producto",
                 style = MaterialTheme.typography.titleMedium
             )
 
@@ -222,12 +244,33 @@ private fun FormularioProductoCard(
                 )
             }
 
-            Button(
-                onClick = onRegistrar,
-                enabled = !registrando,
-                modifier = Modifier.fillMaxWidth()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(if (registrando) "Registrando…" else "Registrar")
+
+                Button(
+                    onClick = onGuardar,
+                    enabled = !guardando,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        when {
+                            guardando -> "Guardando…"
+                            formulario.editando -> "Guardar cambios"
+                            else -> "Registrar"
+                        }
+                    )
+                }
+
+                if (formulario.editando) {
+                    OutlinedButton(
+                        onClick = onCancelar,
+                        enabled = !guardando
+                    ) {
+                        Text("Cancelar")
+                    }
+                }
             }
         }
     }
@@ -266,7 +309,10 @@ private fun EncabezadoInventario(
 
 @Composable
 private fun ProductoItem(
-    producto: ProductoUi
+    producto: ProductoUi,
+    eliminando: Boolean,
+    onEditar: () -> Unit,
+    onEliminar: () -> Unit
 ) {
 
     Card(
@@ -276,7 +322,7 @@ private fun ProductoItem(
         Row(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
 
             Surface(
@@ -327,6 +373,27 @@ private fun ProductoItem(
                         )
                     )
                 }
+            }
+
+            IconButton(
+                onClick = onEditar,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Editar ${producto.nombre}"
+                )
+            }
+
+            IconButton(
+                onClick = onEliminar,
+                enabled = !eliminando,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Eliminar ${producto.nombre}"
+                )
             }
         }
     }

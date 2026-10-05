@@ -16,6 +16,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNull
+import pe.edu.upeu.pharmamobil.domain.usecase.ActualizarProductoUseCase
+import pe.edu.upeu.pharmamobil.domain.usecase.EliminarProductoUseCase
+import kotlin.test.assertNotNull
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ProductoViewModelTest {
@@ -34,7 +37,9 @@ class ProductoViewModelTest {
         repositorio: FakeProductoRepository = FakeProductoRepository()
     ) = ProductoViewModel(
         registrarProducto = RegistrarProductoUseCase(repositorio),
-        listarProductos = ListarProductosUseCase(repositorio)
+        listarProductos = ListarProductosUseCase(repositorio),
+        actualizarProducto = ActualizarProductoUseCase(repositorio),
+        eliminarProducto = EliminarProductoUseCase(repositorio)
     )
 
     @Test
@@ -97,5 +102,47 @@ class ProductoViewModelTest {
         assertNull(estado.formulario.nombreError)
         assertNull(estado.formulario.stockError)
         assertEquals(0, repositorio.vecesQueSeLlamoRegistrar)
+    }
+
+    @Test
+    fun eliminarDejaElProductoInactivoYLaListaVisible() = runTest {
+
+        val repositorio = FakeProductoRepository(
+            mutableListOf(Producto(id = 1L, nombre = "Paracetamol", precio = 8.5, stock = 100))
+        )
+        val viewModel = nuevoViewModel(repositorio)
+
+        viewModel.eliminar(1L)
+
+        val estado = viewModel.uiState.value
+        val fase = assertIs<ProductoUiState.Fase.ConProductos>(estado.fase)
+
+        assertEquals(false, fase.productos.first().activo)
+        assertEquals(ProductoUiState.Operacion.Inactiva, estado.operacion)
+        assertNotNull(estado.mensajeExito)
+    }
+
+    @Test
+    fun actualizarCambiaElProductoYLimpiaElFormulario() = runTest {
+
+        val repositorio = FakeProductoRepository(
+            mutableListOf(Producto(id = 1L, nombre = "Paracetamol", precio = 8.5, stock = 100))
+        )
+        val viewModel = nuevoViewModel(repositorio)
+
+        val productoUi = assertIs<ProductoUiState.Fase.ConProductos>(
+            viewModel.uiState.value.fase
+        ).productos.first()
+
+        viewModel.editar(productoUi)
+        viewModel.onNombreChange("Paracetamol 500 mg")
+        viewModel.guardar()
+
+        val estado = viewModel.uiState.value
+        val fase = assertIs<ProductoUiState.Fase.ConProductos>(estado.fase)
+
+        assertEquals("Paracetamol 500 mg", fase.productos.first().nombre)
+        assertEquals(ProductoUiState.Operacion.Inactiva, estado.operacion)
+        assertNull(estado.formulario.idEnEdicion)
     }
 }

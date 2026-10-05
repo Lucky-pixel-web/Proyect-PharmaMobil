@@ -10,7 +10,9 @@ data class ProductoUi(
     val stock: String,
     val activo: Boolean,
     val esBajoStock: Boolean,
-    val requiereReposicion: Boolean
+    val requiereReposicion: Boolean,
+    val precioValor: String,
+    val stockValor: String
 )
 
 fun Producto.aUi(): ProductoUi = ProductoUi(
@@ -20,10 +22,11 @@ fun Producto.aUi(): ProductoUi = ProductoUi(
     stock = "$stock u.",
     activo = activo,
     esBajoStock = esBajoStock(),
-    requiereReposicion = requiereReposicion()
+    requiereReposicion = requiereReposicion(),
+    precioValor = precio.toString(),
+    stockValor = stock.toString()
 )
 
-/** Kotlin que no trae String.format */
 private fun Double.enSoles(): String {
     val centavos = (this * 100).roundToLong()
     val enteros = centavos / 100
