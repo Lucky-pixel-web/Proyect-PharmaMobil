@@ -19,6 +19,8 @@ import kotlin.test.assertNull
 import pe.edu.upeu.pharmamobil.domain.usecase.ActualizarProductoUseCase
 import pe.edu.upeu.pharmamobil.domain.usecase.EliminarProductoUseCase
 import kotlin.test.assertNotNull
+import pe.edu.upeu.pharmamobil.domain.error.ErrorApi
+import pe.edu.upeu.pharmamobil.domain.error.ErrorApiException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ProductoViewModelTest {
@@ -144,5 +146,50 @@ class ProductoViewModelTest {
         assertEquals("Paracetamol 500 mg", fase.productos.first().nombre)
         assertEquals(ProductoUiState.Operacion.Inactiva, estado.operacion)
         assertNull(estado.formulario.idEnEdicion)
+    }
+    @Test
+    fun validacionDelServidorSeMuestraDebajoDelCampo() = runTest {
+
+        val mensaje = "El nombre debe tener entre 3 y 150 caracteres"
+        val repositorio = FakeProductoRepository().apply {
+            fallaAlRegistrar = ErrorApiException(
+                ErrorApi.Validacion(mapOf("nombre" to mensaje))
+            )
+        }
+        val viewModel = nuevoViewModel(repositorio)
+
+        viewModel.onNombreChange("ab")
+        viewModel.onPrecioChange("5")
+        viewModel.onStockChange("10")
+        viewModel.registrar()
+
+        val estado = viewModel.uiState.value
+
+        assertEquals(mensaje, estado.formulario.nombreError)
+        assertNull(estado.formulario.precioError)
+        assertNull(estado.formulario.stockError)
+        assertEquals(ProductoUiState.Operacion.Inactiva, estado.operacion)
+        assertEquals(ProductoUiState.Fase.SinProductos, estado.fase)
+    }
+
+    @Test
+    fun validacionSinCampoMuestraAvisoGeneral() = runTest {
+
+        val repositorio = FakeProductoRepository().apply {
+            fallaAlRegistrar = ErrorApiException(
+                ErrorApi.Validacion(emptyMap(), "El cuerpo de la petición no es válido")
+            )
+        }
+        val viewModel = nuevoViewModel(repositorio)
+
+        viewModel.onNombreChange("Aspirina")
+        viewModel.onPrecioChange("5")
+        viewModel.onStockChange("10")
+        viewModel.registrar()
+
+        val estado = viewModel.uiState.value
+
+        assertIs<ProductoUiState.Operacion.Fallida>(estado.operacion)
+        assertNull(estado.formulario.nombreError)
     }
 }

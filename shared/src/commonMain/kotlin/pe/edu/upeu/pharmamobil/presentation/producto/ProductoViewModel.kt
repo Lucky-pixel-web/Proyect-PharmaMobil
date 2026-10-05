@@ -14,6 +14,9 @@ import pe.edu.upeu.pharmamobil.domain.usecase.ProductoInvalidoException
 import pe.edu.upeu.pharmamobil.domain.usecase.RegistrarProductoUseCase
 import pe.edu.upeu.pharmamobil.presentation.producto.ProductoUiState.Operacion
 import pe.edu.upeu.pharmamobil.presentation.producto.ProductoUiState.Operacion.Tipo
+import pe.edu.upeu.pharmamobil.domain.error.ErrorApi
+import pe.edu.upeu.pharmamobil.domain.error.ErrorApiException
+import pe.edu.upeu.pharmamobil.domain.error.mensajeUsuario
 
 class ProductoViewModel(
     private val registrarProducto: RegistrarProductoUseCase,
@@ -207,8 +210,10 @@ class ProductoViewModel(
     }
 
     private fun manejarFallo(fallo: Throwable) {
-        when (fallo) {
-            is ProductoInvalidoException -> _uiState.update {
+        val error = (fallo as? ErrorApiException)?.error
+
+        when {
+            fallo is ProductoInvalidoException -> _uiState.update {
                 it.copy(
                     operacion = Operacion.Inactiva,
                     formulario = it.formulario.copy(
@@ -219,6 +224,8 @@ class ProductoViewModel(
                 )
             }
 
+            error is ErrorApi.Validacion -> mostrarErroresDelServidor(error)
+
             else -> _uiState.update {
                 it.copy(
                     operacion = Operacion.Fallida(
@@ -228,4 +235,28 @@ class ProductoViewModel(
             }
         }
     }
+
+    private fun mostrarErroresDelServidor(error: ErrorApi.Validacion) {
+        val campos = error.porCampo
+        val sinCampo = campos.filterKeys { it !in CAMPOS_DEL_FORMULARIO }
+
+        val avisoGeneral = when {
+            sinCampo.isNotEmpty() -> sinCampo.values.joinToString(". ")
+            campos.isEmpty() -> error.mensajeUsuario()
+            else -> null
+        }
+
+        _uiState.update {
+            it.copy(
+                operacion = avisoGeneral?.let { mensaje -> Operacion.Fallida(mensaje) }
+                    ?: Operacion.Inactiva,
+                formulario = it.formulario.copy(
+                    nombreError = campos["nombre"],
+                    precioError = campos["precio"],
+                    stockError = campos["stock"]
+                )
+            )
+        }
+    }
+    private val CAMPOS_DEL_FORMULARIO = setOf("nombre", "precio", "stock")
 }

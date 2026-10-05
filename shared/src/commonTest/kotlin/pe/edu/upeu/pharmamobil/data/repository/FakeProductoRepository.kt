@@ -10,6 +10,7 @@ class FakeProductoRepository(
 ) : ProductoRepository {
 
     var fallaAlListar: Throwable? = null
+    var fallaAlRegistrar: Throwable? = null
     var vecesQueSeLlamoRegistrar: Int = 0
         private set
 
@@ -17,6 +18,7 @@ class FakeProductoRepository(
 
     override suspend fun registrar(producto: Producto): Producto {
         vecesQueSeLlamoRegistrar++
+        fallaAlRegistrar?.let { throw it }
         val guardado = producto.copy(id = siguienteId++)
         productos.add(guardado)
         return guardado
