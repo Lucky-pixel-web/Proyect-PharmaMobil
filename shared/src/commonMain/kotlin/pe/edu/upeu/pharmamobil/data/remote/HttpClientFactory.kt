@@ -20,6 +20,7 @@ fun crearHttpClient(engine: HttpClientEngine, urlBase: String): HttpClient =
             json(Json {
                 ignoreUnknownKeys = true
                 isLenient = true
+                encodeDefaults = true
             })
         }
         install(Logging) {
