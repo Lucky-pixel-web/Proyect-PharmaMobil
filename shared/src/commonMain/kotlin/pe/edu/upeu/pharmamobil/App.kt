@@ -13,9 +13,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import pe.edu.upeu.pharmamobil.presentation.cliente.ClienteViewModel
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.filled.Menu
@@ -48,10 +46,13 @@ import org.koin.compose.viewmodel.koinViewModel
 
 import pe.edu.upeu.pharmamobil.navigation.Screen
 import pe.edu.upeu.pharmamobil.presentation.cliente.ClienteScreen
+import pe.edu.upeu.pharmamobil.presentation.cliente.ClienteViewModel
 import pe.edu.upeu.pharmamobil.presentation.inicio.InicioScreen
 import pe.edu.upeu.pharmamobil.presentation.producto.ProductoScreen
 import pe.edu.upeu.pharmamobil.presentation.producto.ProductoViewModel
 import pe.edu.upeu.pharmamobil.theme.PharmaMobilTheme
+import pe.edu.upeu.pharmamobil.presentation.detalle.DetalleProductoScreen
+import pe.edu.upeu.pharmamobil.presentation.detalle.DetalleProductoViewModel
 
 @Composable
 fun App() = KoinContext {
@@ -263,7 +264,27 @@ fun App() = KoinContext {
                                 val productoViewModel: ProductoViewModel = koinViewModel()
 
                                 ProductoScreen(
-                                    viewModel = productoViewModel
+                                    viewModel = productoViewModel,
+                                    onVerDetalle = { id ->
+                                        pantallaActual = Screen.DetalleProducto(id)
+                                    }
+                                )
+                            }
+                        }
+
+                        is Screen.DetalleProducto -> {
+
+                            Column(
+                                modifier = Modifier
+                                    .padding(paddingValues)
+                            ) {
+
+                                val detalleViewModel: DetalleProductoViewModel = koinViewModel()
+
+                                DetalleProductoScreen(
+                                    productoId = screen.productoId,
+                                    viewModel = detalleViewModel,
+                                    onVolver = { pantallaActual = Screen.Productos }
                                 )
                             }
                         }
@@ -334,6 +355,9 @@ private fun tituloPantalla(
 
         Screen.Productos ->
             "Productos"
+
+        is Screen.DetalleProducto ->
+            "Detalle del producto"
 
         Screen.Clientes ->
             "Clientes"

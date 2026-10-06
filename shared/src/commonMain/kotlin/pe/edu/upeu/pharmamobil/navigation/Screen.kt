@@ -6,8 +6,9 @@ sealed class Screen {
 
     data object Productos : Screen()
 
+    data class DetalleProducto(val productoId: Long) : Screen()
+
     data object Clientes : Screen()
 
     data object Pedidos : Screen()
-
 }

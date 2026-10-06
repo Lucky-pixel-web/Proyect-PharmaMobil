@@ -1,5 +1,6 @@
 package pe.edu.upeu.pharmamobil.presentation.producto
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,6 +49,7 @@ import pe.edu.upeu.pharmamobil.presentation.producto.ProductoUiState.Operacion
 @Composable
 fun ProductoScreen(
     viewModel: ProductoViewModel,
+    onVerDetalle: (Long) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
 
@@ -158,7 +160,8 @@ fun ProductoScreen(
                                     producto = producto,
                                     eliminando = eliminando,
                                     onEditar = { viewModel.editar(producto) },
-                                    onEliminar = { viewModel.eliminar(producto.id) }
+                                    onEliminar = { viewModel.eliminar(producto.id) },
+                                    onVerDetalle = { onVerDetalle(producto.id) }
                                 )
                             }
                         }
@@ -312,11 +315,14 @@ private fun ProductoItem(
     producto: ProductoUi,
     eliminando: Boolean,
     onEditar: () -> Unit,
-    onEliminar: () -> Unit
+    onEliminar: () -> Unit,
+    onVerDetalle: () -> Unit
 ) {
 
     Card(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onVerDetalle)
     ) {
 
         Row(
