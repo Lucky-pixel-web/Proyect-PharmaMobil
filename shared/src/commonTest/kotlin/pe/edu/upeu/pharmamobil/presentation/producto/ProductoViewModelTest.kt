@@ -21,6 +21,7 @@ import pe.edu.upeu.pharmamobil.domain.usecase.EliminarProductoUseCase
 import kotlin.test.assertNotNull
 import pe.edu.upeu.pharmamobil.domain.error.ErrorApi
 import pe.edu.upeu.pharmamobil.domain.error.ErrorApiException
+import pe.edu.upeu.pharmamobil.domain.usecase.ObtenerProductoUseCase
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ProductoViewModelTest {
@@ -41,7 +42,8 @@ class ProductoViewModelTest {
         registrarProducto = RegistrarProductoUseCase(repositorio),
         listarProductos = ListarProductosUseCase(repositorio),
         actualizarProducto = ActualizarProductoUseCase(repositorio),
-        eliminarProducto = EliminarProductoUseCase(repositorio)
+        eliminarProducto = EliminarProductoUseCase(repositorio),
+        obtenerProducto = ObtenerProductoUseCase(repositorio)
     )
 
     @Test

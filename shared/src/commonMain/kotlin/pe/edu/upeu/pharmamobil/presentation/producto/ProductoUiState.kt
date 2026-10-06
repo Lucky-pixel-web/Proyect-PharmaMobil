@@ -23,7 +23,7 @@ data class ProductoUiState(
 
         data class Fallida(val mensaje: String) : Operacion
 
-        enum class Tipo { Crear, Actualizar, Eliminar }
+        enum class Tipo { Crear, Actualizar, Eliminar, Obtener }
     }
 }
 

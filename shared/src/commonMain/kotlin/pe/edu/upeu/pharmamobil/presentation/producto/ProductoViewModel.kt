@@ -17,12 +17,14 @@ import pe.edu.upeu.pharmamobil.presentation.producto.ProductoUiState.Operacion.T
 import pe.edu.upeu.pharmamobil.domain.error.ErrorApi
 import pe.edu.upeu.pharmamobil.domain.error.ErrorApiException
 import pe.edu.upeu.pharmamobil.domain.error.mensajeUsuario
+import pe.edu.upeu.pharmamobil.domain.usecase.ObtenerProductoUseCase
 
 class ProductoViewModel(
     private val registrarProducto: RegistrarProductoUseCase,
     private val listarProductos: ListarProductosUseCase,
     private val actualizarProducto: ActualizarProductoUseCase,
-    private val eliminarProducto: EliminarProductoUseCase
+    private val eliminarProducto: EliminarProductoUseCase,
+    private val obtenerProducto: ObtenerProductoUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProductoUiState())
@@ -87,21 +89,28 @@ class ProductoViewModel(
             )
         }
     }
-
     fun editar(producto: ProductoUi) {
         if (hayOperacionEnCurso()) return
-        _uiState.update {
-            it.copy(
-                formulario = FormularioProducto(
-                    idEnEdicion = producto.id,
-                    activoEnEdicion = producto.activo,
-                    nombre = producto.nombre,
-                    precio = producto.precioValor,
-                    stock = producto.stockValor
-                ),
-                operacion = Operacion.Inactiva,
-                mensajeExito = null
-            )
+        marcarEnCurso(Tipo.Obtener)
+
+        viewModelScope.launch {
+            obtenerProducto(producto.id)
+                .onSuccess { encontrado ->
+                    val detalle = encontrado.aUi()
+                    _uiState.update {
+                        it.copy(
+                            operacion = Operacion.Inactiva,
+                            formulario = FormularioProducto(
+                                idEnEdicion = detalle.id,
+                                activoEnEdicion = detalle.activo,
+                                nombre = detalle.nombre,
+                                precio = detalle.precioValor,
+                                stock = detalle.stockValor
+                            )
+                        )
+                    }
+                }
+                .onFailure { fallo -> manejarFallo(fallo) }
         }
     }
 
