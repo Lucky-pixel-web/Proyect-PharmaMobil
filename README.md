@@ -1,12 +1,12 @@
-# PharmaMobil · Práctica 07: Cliente Ktor y consumo GET
+# PharmaMobil · Práctica 08: CRUD REST con Ktor
 
 Aplicación Kotlin Multiplatform (Android e iOS) con Compose Multiplatform, arquitectura Clean + MVVM e inyección con Koin. En esta práctica el listado de productos deja de venir del repositorio en memoria y se consume desde el backend **PharmaSoft** (API REST) con **Ktor Client**.
 
 - **Asignatura:** Desarrollo de Aplicaciones Móviles · UPeU · Semestre 2026-2
 - **Sesión:** 8 (Unidad 2, sesión 2)
 - **Autor:** Diego Contreras
-- **Rama:** `feature/ktor-client-contreras`
-- **Compañero de pareja:** _(completar nombre y rama)_
+- **Rama:** `feature/crud-productos-contreras`
+- **Compañero de pareja:** _(Diego Contreras)_
 
 ---
 
