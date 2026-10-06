@@ -222,3 +222,18 @@ Las pruebas están en `shared/src/commonTest` y se ejecutan en ambas plataformas
 - `EjecutarLlamadaTest`: traducción de excepciones a `ErrorApi` y relanzamiento de la cancelación.
 
 Se ejecutan desde Android Studio con clic derecho sobre `commonTest` → **Run Tests**.
+
+## Capacidades nativas
+
+El mecanismo `expect/actual` y la inyección de implementaciones por plataforma permiten que `commonMain` declare qué debe existir sin saber cómo se resuelve.
+
+| Capacidad | Estrategia | Declaración común | Android | iOS |
+|---|---|---|---|---|
+| Formato de moneda | `expect/actual` (función sin estado) | `commonMain/platform/Formato.kt` | `androidMain/platform/Formato.android.kt` (`NumberFormat`, `Locale("es","PE")`) | `iosMain/platform/Formato.ios.kt` (`NSNumberFormatter`, `es_PE`) |
+| Compartir un producto | Interfaz + Koin (necesita `Context` / controlador de vista) | `commonMain/domain/platform/Compartidor.kt` | `androidMain/platform/CompartidorAndroid.kt` (`Intent.ACTION_SEND`) | `iosMain/platform/CompartidorIos.kt` (`UIActivityViewController`) |
+
+- Las implementaciones se registran en el `platformModule` de cada plataforma (`androidMain/di` e `iosMain/di`).
+- El texto a compartir se arma en código común (`domain/usecase/TextoParaCompartir.kt`) y el formato de precio se aplica en la capa de presentación (`ProductoUi`).
+- La capa `presentation` no importa paquetes de Android ni de UIKit.
+- La pantalla de detalle (`presentation/detalle`) llama a `DetalleProductoViewModel.compartir()` y no sabe qué implementación hay detrás.
+- Las pruebas de `commonTest` sustituyen `Compartidor` por un doble.git add README.md
