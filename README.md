@@ -3,7 +3,7 @@
 Aplicación Kotlin Multiplatform (Android e iOS) con Compose Multiplatform, arquitectura Clean + MVVM e inyección con Koin. En esta práctica el listado de productos deja de venir del repositorio en memoria y se consume desde el backend **PharmaSoft** (API REST) con **Ktor Client**.
 
 - **Asignatura:** Desarrollo de Aplicaciones Móviles · UPeU · Semestre 2026-2
-- **Sesión:** 7 (Unidad 2, sesión 1)
+- **Sesión:** 8 (Unidad 2, sesión 2)
 - **Autor:** Diego Contreras
 - **Rama:** `feature/ktor-client-contreras`
 - **Compañero de pareja:** _(completar nombre y rama)_
@@ -181,3 +181,44 @@ shared/src/
 ├── androidMain/.../di/        PlatformModule (OkHttp + 10.0.2.2)
 └── iosMain/.../di/            PlatformModule (Darwin + localhost)
 ```
+
+## Manejo de errores
+
+Todo fallo de red o del servidor se traduce a un tipo del dominio, `ErrorApi`, en **un único punto**: la función `ejecutarLlamada` (`data/remote/EjecutarLlamada.kt`). La capa de presentación nunca importa `io.ktor`; solo recibe un `ErrorApiException` con el `ErrorApi` correspondiente.
+
+| Situación | Excepción de origen | `ErrorApi` | Qué ve el usuario |
+|---|---|---|---|
+| 400 con detalle por campo | `ClientRequestException` | `Validacion(porCampo, mensaje)` | El mensaje del servidor debajo del campo nombre, precio o stock |
+| 400 sin campo conocido | `ClientRequestException` | `Validacion` | Cuadro rojo con el mensaje del servidor |
+| 404 | `ClientRequestException` | `NoEncontrado` | «No se encontró la información solicitada.» |
+| 409 | `ClientRequestException` | `Conflicto(mensaje)` | El mensaje del servidor (nombre duplicado, producto ya inactivo) |
+| 5xx | `ServerResponseException` | `Servidor` | «El servidor tuvo un problema. Inténtalo más tarde.» |
+| Tiempo de espera agotado | `HttpRequestTimeoutException` | `TiempoAgotado` | «El servidor tardó demasiado en responder. Inténtalo de nuevo.» |
+| Sin conexión u otro fallo de red | cualquier otra excepción | `SinConexion` | «No se pudo conectar con el servidor. Revisa tu conexión a internet.» |
+| Respuesta con formato inesperado | `SerializationException` | `Servidor` | Igual que un error del servidor |
+| Cancelación de la corrutina | `CancellationException` | ninguno | No se muestra error: la excepción se relanza |
+
+### Cómo se refleja en la interfaz
+
+`ProductoUiState` separa dos cosas para no confundir «cargando la lista» con «guardando un producto»:
+
+- **`Fase`** describe la lista: `Cargando`, `SinProductos`, `ConProductos` y `Error` (con botón Reintentar).
+- **`Operacion`** describe la acción en curso: `Inactiva`, `EnCurso(tipo)` y `Fallida(mensaje)`. Durante una operación el listado permanece visible.
+
+Los errores de validación del servidor se asignan a `nombreError`, `precioError` y `stockError` del formulario. La validación local (nombre con caracteres permitidos, precio mayor que cero, stock entero no negativo) se ejecuta antes de llamar al servidor y no genera ninguna petición HTTP.
+
+### Reglas del backend que conviene conocer
+
+- `DELETE /api/v1/productos/{id}` es una **baja lógica**: el producto queda con `estado = false` y pasa a la pestaña Inactivos. Una segunda eliminación del mismo producto responde **409** («ya se encuentra inactivo»), no 404.
+- Crear o actualizar con un nombre ya usado por otro producto responde **409**.
+- Crear o actualizar con una categoría inexistente responde **404**.
+- El precio mínimo que acepta el servidor es 0.01.
+
+### Pruebas
+
+Las pruebas están en `shared/src/commonTest` y se ejecutan en ambas plataformas:
+
+- `ProductoViewModelTest`: transiciones de estado (carga, lista vacía, validación del servidor, eliminación con `EnCurso`, cancelación).
+- `EjecutarLlamadaTest`: traducción de excepciones a `ErrorApi` y relanzamiento de la cancelación.
+
+Se ejecutan desde Android Studio con clic derecho sobre `commonTest` → **Run Tests**.
