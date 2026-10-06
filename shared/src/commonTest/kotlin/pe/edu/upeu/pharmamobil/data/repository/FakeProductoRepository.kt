@@ -1,5 +1,6 @@
 package pe.edu.upeu.pharmamobil.data.repository
 
+import kotlinx.coroutines.CompletableDeferred
 import pe.edu.upeu.pharmamobil.domain.error.ErrorApi
 import pe.edu.upeu.pharmamobil.domain.error.ErrorApiException
 import pe.edu.upeu.pharmamobil.domain.model.Producto
@@ -11,7 +12,14 @@ class FakeProductoRepository(
 
     var fallaAlListar: Throwable? = null
     var fallaAlRegistrar: Throwable? = null
+
+    /* Mientras la compuerta no se complete, la operación queda detenida a mitad de camino. */
+    var compuertaListar: CompletableDeferred<Unit>? = null
+    var compuertaEliminar: CompletableDeferred<Unit>? = null
+
     var vecesQueSeLlamoRegistrar: Int = 0
+        private set
+    var vecesQueSeLlamoListar: Int = 0
         private set
 
     private var siguienteId = 1L
@@ -25,6 +33,8 @@ class FakeProductoRepository(
     }
 
     override suspend fun listar(): List<Producto> {
+        vecesQueSeLlamoListar++
+        compuertaListar?.await()
         fallaAlListar?.let { throw it }
         return productos.toList()
     }
@@ -41,6 +51,7 @@ class FakeProductoRepository(
     }
 
     override suspend fun eliminar(id: Long) {
+        compuertaEliminar?.await()
         val indice = productos.indexOfFirst { it.id == id }
         if (indice < 0) throw ErrorApiException(ErrorApi.NoEncontrado)
         productos[indice] = productos[indice].copy(activo = false)

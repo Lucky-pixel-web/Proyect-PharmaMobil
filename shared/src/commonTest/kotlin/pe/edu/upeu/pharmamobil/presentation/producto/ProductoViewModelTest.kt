@@ -22,6 +22,10 @@ import kotlin.test.assertNotNull
 import pe.edu.upeu.pharmamobil.domain.error.ErrorApi
 import pe.edu.upeu.pharmamobil.domain.error.ErrorApiException
 import pe.edu.upeu.pharmamobil.domain.usecase.ObtenerProductoUseCase
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.cancel
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ProductoViewModelTest {
@@ -193,5 +197,72 @@ class ProductoViewModelTest {
 
         assertIs<ProductoUiState.Operacion.Fallida>(estado.operacion)
         assertNull(estado.formulario.nombreError)
+    }
+
+    @Test
+    fun cargaExitosaPasaDeCargandoAConProductos() = runTest {
+
+        val repositorio = FakeProductoRepository(
+            mutableListOf(
+                Producto(id = 1L, nombre = "Paracetamol", precio = 8.5, stock = 100),
+                Producto(id = 2L, nombre = "Ibuprofeno", precio = 12.0, stock = 50)
+            )
+        ).apply { compuertaListar = CompletableDeferred() }
+
+        val viewModel = nuevoViewModel(repositorio)
+
+        assertEquals(ProductoUiState.Fase.Cargando, viewModel.uiState.value.fase)
+
+        repositorio.compuertaListar!!.complete(Unit)
+
+        val fase = assertIs<ProductoUiState.Fase.ConProductos>(viewModel.uiState.value.fase)
+        assertEquals(listOf("Paracetamol", "Ibuprofeno"), fase.productos.map { it.nombre })
+    }
+
+    @Test
+    fun eliminarPasaPorEnCursoYVuelveAInactivaRecargandoLaLista() = runTest {
+
+        val repositorio = FakeProductoRepository(
+            mutableListOf(Producto(id = 1L, nombre = "Paracetamol", precio = 8.5, stock = 100))
+        ).apply { compuertaEliminar = CompletableDeferred() }
+
+        val viewModel = nuevoViewModel(repositorio)
+
+        viewModel.eliminar(1L)
+
+        assertEquals(
+            ProductoUiState.Operacion.EnCurso(ProductoUiState.Operacion.Tipo.Eliminar),
+            viewModel.uiState.value.operacion
+        )
+        assertIs<ProductoUiState.Fase.ConProductos>(viewModel.uiState.value.fase)
+
+        repositorio.compuertaEliminar!!.complete(Unit)
+
+        val estado = viewModel.uiState.value
+        assertEquals(ProductoUiState.Operacion.Inactiva, estado.operacion)
+        assertEquals(2, repositorio.vecesQueSeLlamoListar)
+
+        val fase = assertIs<ProductoUiState.Fase.ConProductos>(estado.fase)
+        assertEquals(false, fase.productos.first().activo)
+    }
+
+    @Test
+    fun cancelarLaCorrutinaNoMuestraError() = runTest {
+
+        val repositorio = FakeProductoRepository(
+            mutableListOf(Producto(id = 1L, nombre = "Paracetamol", precio = 8.5, stock = 100))
+        ).apply { compuertaEliminar = CompletableDeferred() }
+
+        val viewModel = nuevoViewModel(repositorio)
+
+        viewModel.eliminar(1L)
+        assertIs<ProductoUiState.Operacion.EnCurso>(viewModel.uiState.value.operacion)
+
+        viewModel.viewModelScope.cancel()
+
+        val estado = viewModel.uiState.value
+        assertTrue(estado.operacion !is ProductoUiState.Operacion.Fallida)
+        assertTrue(estado.fase !is ProductoUiState.Fase.Error)
+        assertNull(estado.mensajeExito)
     }
 }
