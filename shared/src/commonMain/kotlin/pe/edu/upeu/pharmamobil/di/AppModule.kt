@@ -21,6 +21,7 @@ import pe.edu.upeu.pharmamobil.domain.usecase.RegistrarProductoUseCase
 import pe.edu.upeu.pharmamobil.presentation.cliente.ClienteViewModel
 import pe.edu.upeu.pharmamobil.presentation.producto.ProductoViewModel
 import pe.edu.upeu.pharmamobil.domain.usecase.ObtenerProductoUseCase
+import pe.edu.upeu.pharmamobil.presentation.detalle.DetalleProductoViewModel
 private const val CATEGORIA_POR_DEFECTO = 21L
 
 val dataModule = module {
@@ -43,6 +44,7 @@ val domainModule = module {
 val presentationModule = module {
     viewModel { ProductoViewModel(get(), get(), get(), get(), get()) }
     viewModel { ClienteViewModel(get(), get()) }
+    viewModel { DetalleProductoViewModel(get(), get()) }
 }
 
 expect val platformModule: Module
