@@ -1,11 +1,10 @@
-# PharmaMobil · Práctica 08: CRUD REST con Ktor
+# PharmaMobil · Práctica 08-09: CRUD REST con Ktor
 
 Aplicación Kotlin Multiplatform (Android e iOS) con Compose Multiplatform, arquitectura Clean + MVVM e inyección con Koin. En esta práctica el listado de productos deja de venir del repositorio en memoria y se consume desde el backend **PharmaSoft** (API REST) con **Ktor Client**.
 
 - **Asignatura:** Desarrollo de Aplicaciones Móviles · UPeU · Semestre 2026-2
-- **Sesión:** 8 (Unidad 2, sesión 2)
 - **Autor:** Diego Contreras
-- **Rama:** `feature/crud-productos-contreras`
+- **Rama:** `feature/expect-actual-contreras` (la práctica 08 está en `feature/crud-productos-contreras`)
 - **Compañero de pareja:** _(Diego Contreras)_
 
 ---
@@ -236,7 +235,7 @@ El mecanismo `expect/actual` y la inyección de implementaciones por plataforma 
 - El texto a compartir se arma en código común (`domain/usecase/TextoParaCompartir.kt`) y el formato de precio se aplica en la capa de presentación (`ProductoUi`).
 - La capa `presentation` no importa paquetes de Android ni de UIKit.
 - La pantalla de detalle (`presentation/detalle`) llama a `DetalleProductoViewModel.compartir()` y no sabe qué implementación hay detrás.
-- Las pruebas de `commonTest` sustituyen `Compartidor` por un doble.git add README.md
+- Las pruebas de `commonTest` sustituyen `Compartidor` por un doble.
 
 
 ## Código específico de plataforma
@@ -250,6 +249,6 @@ Inventario de lo que baja al source set de cada plataforma. Todo lo demás vive 
 | Módulo de inyección | `expect val platformModule: Module` en `di/AppModule.kt` | `di/PlatformModule.android.kt`: `module` con `androidContext()` y motor `OkHttp` | `di/PlatformModule.kt`: `module` sin contexto y motor `Darwin` | `expect/actual` |
 | Información del dispositivo | `expect class InfoDispositivo()` en `platform/InfoDispositivo.kt` | `platform/InfoDispositivo.android.kt`: `Build.VERSION.RELEASE` | `platform/InfoDispositivo.ios.kt`: `UIDevice.currentDevice.systemVersion` | `expect/actual` |
 
-Otras piezas específicas de plataforma que no son `expect`: `androidApp/.../MainApplication.kt` (arranca Koin con `androidContext`), `androidApp/.../MainActivity.kt`, `iosMain/.../di/Koinios.kt` (`initKoinIos`), `iosMain/.../MainViewController.kt` y los archivos Swift de `iosApp`.
+Otras piezas específicas de plataforma que no son `expect`: `androidApp/.../MainApplication.kt` (arranca Koin con `androidContext`), `androidApp/.../MainActivity.kt`, `iosMain/.../di/KoinIos.kt` (`initKoinIos`), `iosMain/.../MainViewController.kt` y los archivos Swift de `iosApp`.
 
 Regla de aislamiento: `commonMain` no contiene ninguna importación `import android.` ni `import platform.`. Resultado observado en Android: `NumberFormat` devuelve `S/ 6.20` con un espacio duro (código 160) entre el símbolo y el número.
