@@ -237,3 +237,19 @@ El mecanismo `expect/actual` y la inyección de implementaciones por plataforma 
 - La capa `presentation` no importa paquetes de Android ni de UIKit.
 - La pantalla de detalle (`presentation/detalle`) llama a `DetalleProductoViewModel.compartir()` y no sabe qué implementación hay detrás.
 - Las pruebas de `commonTest` sustituyen `Compartidor` por un doble.git add README.md
+
+
+## Código específico de plataforma
+
+Inventario de lo que baja al source set de cada plataforma. Todo lo demás vive en `commonMain`. Las rutas son relativas a `shared/src/<source set>/kotlin/pe/edu/upeu/pharmamobil/`.
+
+| Capacidad | Declaración común | Android (`androidMain`) | iOS (`iosMain`) | Estrategia |
+|---|---|---|---|---|
+| Formato de moneda | `expect fun formatearSoles(valor: Double): String` en `platform/Formato.kt` | `platform/Formato.android.kt`: `NumberFormat.getCurrencyInstance(Locale("es", "PE"))` | `platform/Formato.ios.kt`: `NSNumberFormatter` con `NSLocale("es_PE")` | `expect/actual` |
+| Compartir producto | `interface Compartidor` en `domain/platform/Compartidor.kt` | `platform/CompartidorAndroid.kt`: `Intent.ACTION_SEND` con `createChooser` | `platform/CompartidorIos.kt`: `UIActivityViewController` | Interfaz + Koin |
+| Módulo de inyección | `expect val platformModule: Module` en `di/AppModule.kt` | `di/PlatformModule.android.kt`: `module` con `androidContext()` y motor `OkHttp` | `di/PlatformModule.kt`: `module` sin contexto y motor `Darwin` | `expect/actual` |
+| Información del dispositivo | `expect class InfoDispositivo()` en `platform/InfoDispositivo.kt` | `platform/InfoDispositivo.android.kt`: `Build.VERSION.RELEASE` | `platform/InfoDispositivo.ios.kt`: `UIDevice.currentDevice.systemVersion` | `expect/actual` |
+
+Otras piezas específicas de plataforma que no son `expect`: `androidApp/.../MainApplication.kt` (arranca Koin con `androidContext`), `androidApp/.../MainActivity.kt`, `iosMain/.../di/Koinios.kt` (`initKoinIos`), `iosMain/.../MainViewController.kt` y los archivos Swift de `iosApp`.
+
+Regla de aislamiento: `commonMain` no contiene ninguna importación `import android.` ni `import platform.`. Resultado observado en Android: `NumberFormat` devuelve `S/ 6.20` con un espacio duro (código 160) entre el símbolo y el número.
