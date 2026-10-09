@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
@@ -43,16 +44,16 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.koin.compose.KoinContext
 import org.koin.compose.viewmodel.koinViewModel
-
 import pe.edu.upeu.pharmamobil.navigation.Screen
+import pe.edu.upeu.pharmamobil.presentation.acercade.AcercaDeScreen
 import pe.edu.upeu.pharmamobil.presentation.cliente.ClienteScreen
 import pe.edu.upeu.pharmamobil.presentation.cliente.ClienteViewModel
+import pe.edu.upeu.pharmamobil.presentation.detalle.DetalleProductoScreen
+import pe.edu.upeu.pharmamobil.presentation.detalle.DetalleProductoViewModel
 import pe.edu.upeu.pharmamobil.presentation.inicio.InicioScreen
 import pe.edu.upeu.pharmamobil.presentation.producto.ProductoScreen
 import pe.edu.upeu.pharmamobil.presentation.producto.ProductoViewModel
 import pe.edu.upeu.pharmamobil.theme.PharmaMobilTheme
-import pe.edu.upeu.pharmamobil.presentation.detalle.DetalleProductoScreen
-import pe.edu.upeu.pharmamobil.presentation.detalle.DetalleProductoViewModel
 
 @Composable
 fun App() = KoinContext {
@@ -165,6 +166,25 @@ fun App() = KoinContext {
                             Icon(
                                 imageVector = Icons.Default.ShoppingCart,
                                 contentDescription = "Pedidos"
+                            )
+                        }
+                    )
+
+                    NavigationDrawerItem(
+                        label = {
+                            Text("Acerca de")
+                        },
+                        selected = pantallaActual is Screen.AcercaDe,
+                        onClick = {
+                            pantallaActual = Screen.AcercaDe
+                            scope.launch {
+                                drawerState.close()
+                            }
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = "Acerca de"
                             )
                         }
                     )
@@ -314,6 +334,17 @@ fun App() = KoinContext {
                                 Text("Pantalla de pedidos en construcción")
                             }
                         }
+
+                        Screen.AcercaDe -> {
+
+                            Column(
+                                modifier = Modifier
+                                    .padding(paddingValues)
+                            ) {
+
+                                AcercaDeScreen()
+                            }
+                        }
                     }
                 }
             }
@@ -364,5 +395,8 @@ private fun tituloPantalla(
 
         Screen.Pedidos ->
             "Pedidos"
+
+        Screen.AcercaDe ->
+            "Acerca de"
     }
 }

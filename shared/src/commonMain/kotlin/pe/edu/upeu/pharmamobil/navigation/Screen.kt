@@ -11,4 +11,6 @@ sealed class Screen {
     data object Clientes : Screen()
 
     data object Pedidos : Screen()
+
+    data object AcercaDe : Screen()
 }
